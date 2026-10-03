@@ -1,0 +1,13 @@
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand" href="#">Expense Tracker</a>
+    <div class="navbar-nav">
+      <a class="nav-link" th:href="@{/accounts}">Accounts</a>
+      <a class="nav-link" th:href="@{/expenses}">Expenses</a>
+      <a class="nav-link" th:href="@{/dashboard}">Dashboard</a>
+      <form th:action="@{/logout}" method="post" class="d-inline">
+    <button type="submit" class="nav-link btn btn-link" style="border:none;">Logout</button>
+</form>
+    </div>
+  </div>
+</nav>

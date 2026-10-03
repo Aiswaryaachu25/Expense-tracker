@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Add Expense</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-4">
+    <h2>Add Expense</h2>
+    <form th:action="@{/expenses/save}" th:object="${expense}" method="post">
+
+        <div class="mb-3">
+            <label class="form-label">Account (Card)</label>
+            <select name="accountId" class="form-select" required>
+                <option th:each="acc : ${accounts}" th:value="${acc.id}" th:text="${acc.name}"></option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <button type="button" id="voiceBtn" class="btn btn-outline-primary w-100">
+             🎤 Speak Expense
+             </button>
+            <p id="voiceStatus" class="text-muted small mt-1"></p>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Amount</label>
+            <input type="number" step="0.01" class="form-control" th:field="*{amount}" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Category</label>
+            <input type="text" class="form-control" th:field="*{category}" placeholder="e.g. Groceries" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Note (optional)</label>
+            <input type="text" class="form-control" th:field="*{note}">
+        </div>
+
+        <button type="submit" class="btn btn-success">Save Expense</button>
+        <a th:href="@{/expenses}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+<script>
+const voiceBtn = document.getElementById('voiceBtn');
+const voiceStatus = document.getElementById('voiceStatus');
+
+voiceBtn.addEventListener('click', () => {
+    if (!('webkitSpeechRecognition' in window)) {
+        voiceStatus.textContent = "Voice input not supported in this browser. Use Chrome.";
+        return;
+    }
+
+    const recognition = new webkitSpeechRecognition();
+    recognition.lang = 'en-IN';
+    recognition.interimResults = false;
+
+    voiceStatus.textContent = "Listening...";
+    recognition.start();
+
+    recognition.onresult = async (event) => {
+    const transcript = event.results[0][0].transcript;
+    voiceStatus.textContent = "Heard: " + transcript + " — parsing with AI...";
+
+    try {
+        const response = await fetch('/expenses/parse-voice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript: transcript })
+        });
+        const data = await response.json();
+
+        document.querySelector('input[name="amount"]').value = data.amount;
+        document.querySelector('input[name="category"]').value = data.category;
+        document.querySelector('input[name="note"]').value = data.note;
+
+        voiceStatus.textContent = "Filled from: " + transcript;
+    } catch (err) {
+        voiceStatus.textContent = "AI parsing failed, try again.";
+    }
+};
+});
+</script>
+</body>
+</html>
